@@ -8,7 +8,7 @@ import org.json4s.JsonDSL._
   *  gitter that get parsed correctly here */
 object GitterInputSanitizer {
   def sanitize(in: String): String = {
-    val tripleBackquoted = "^```(.*)```$".r
+    val tripleBackquoted = """^```\S*\r?\n?(?s)(.*)```$""".r
     val singleBackquoted = "^`(.*)`$".r
 
     in match {
@@ -27,7 +27,7 @@ case class InterpretersHandler(
 
   private var pythonSession = "" //todo
   def serve(implicit msg: Msg): Unit = msg.message match {
-    case Cmd("!" :: m :: Nil) => sendLines(msg.channel, cache.scalaInterpreter(msg.channel) { (si, cout) =>
+    case Cmd("*scala" :: m :: Nil) => sendLines(msg.channel, cache.scalaInterpreter(msg.channel) { (si, cout) =>
       import scala.tools.nsc.interpreter.Results._
 
       si interpret inputSanitizer(m) match {
@@ -37,9 +37,9 @@ case class InterpretersHandler(
       }
     })
 
-    case Cmd("!type" :: m :: Nil) => sendLines(msg.channel, cache.scalaInterpreter(msg.channel)((si, cout) => si.typeOfExpression(m).directObjectString))
-    case "!reset" => cache.scalaInt invalidate msg.channel
-    case "!reset-all" => cache.scalaInt.invalidateAll()
+    case Cmd("*type" :: m :: Nil) => sendLines(msg.channel, cache.scalaInterpreter(msg.channel)((si, cout) => si.typeOfExpression(m).directObjectString))
+    case "*reset" => cache.scalaInt invalidate msg.channel
+    case "*reset-all" => cache.scalaInt.invalidateAll()
 
 //    case Cmd("!scalex" :: m :: Nil) => http.respond(sendLines).respondJSON(:/("api.scalex.org") <<? Map("q" -> m)) {
 //      json =>

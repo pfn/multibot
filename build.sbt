@@ -10,7 +10,7 @@ fork in run := true
 
 connectInput in run := true
 
-mainClass in Compile := Some("org.multibot.Multibottest")
+mainClass in Compile := Some("org.multibot.DiscordMultibot")
 
 updateOptions := updateOptions.value.withCachedResolution(true).withLatestSnapshots(false)
 
@@ -21,6 +21,8 @@ enablePlugins(JavaAppPackaging)
 scalaVersion := "2.12.2"
 
 resolvers += Resolver.sonatypeRepo("snapshots")
+resolvers += Resolver.jcenterRepo
+resolvers += "jitpack" at "https://jitpack.io"
 
 libraryDependencies ++= {
   val scalazVersion = "7.2.11"
@@ -38,7 +40,8 @@ libraryDependencies ++= {
     "com.github.julien-truffaut" %% "monocle-law" % monocleVersion,
     "com.github.julien-truffaut" %% "monocle-macro" % monocleVersion,
     "org.spire-math" %% "spire" % spireVersion,
-    "org.scalaz.stream" %% "scalaz-stream" % scalazStreamVersion
+    "org.scalaz.stream" %% "scalaz-stream" % scalazStreamVersion,
+    "com.github.austinv11" % "Discord4J" % "2.8.2"
 //    "org.pelotom" %% "effectful" % "1.1-SNAPSHOT"
   )
 }
