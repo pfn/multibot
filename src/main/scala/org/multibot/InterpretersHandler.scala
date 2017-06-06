@@ -19,13 +19,16 @@ object GitterInputSanitizer {
   }
 }
 
+object InterpretersHandler {
+  private var pythonSession = "" // ugh
+}
 case class InterpretersHandler(
   cache: InterpretersCache,
   http: HttpHandler,
   sendLines: (String, String) => Unit,
   inputSanitizer: String => String) {
+  import InterpretersHandler._
 
-  private var pythonSession = "" //todo
   def serve(implicit msg: Msg): Unit = msg.message match {
     case Cmd("*scala" :: m :: Nil) => sendLines(msg.channel, cache.scalaInterpreter(msg.channel) { (si, cout) =>
       import scala.tools.nsc.interpreter.Results._
@@ -72,41 +75,41 @@ case class InterpretersHandler(
 //      case line => Some(line.replaceAll("^res[0-9]+: ", ""))
 //    }
 //
-//    case Cmd("," :: m :: Nil) => http.respond(sendLines).respondJSON(:/("www.tryclj.com") / "eval.json" <<? Map("expr" -> m)) {
-//      case JObject(JField("expr", JString(_)) :: JField("result", JString(result)) :: Nil) => Some(result)
-//      case JObject(JField("error", JBool(true)) :: JField("message", JString(message)) :: Nil) => Some(message)
-//      case e => Some("unexpected: " + e)
-//    }
-//
-//    case Cmd(">>" :: m :: Nil) => http.respond(sendLines).respondJSON(:/("tryhaskell.org") / "eval" <<? Map("exp" -> m)) {
-//      case JObject(
-//      JField("success",
-//      JObject(
-//      JField("expr", JString(_))
-//        :: JField("stdout", JArray(out))
-//        :: JField("value", JString(result))
-//        :: JField("files", _)
-//        :: JField("type", JString(xtype))
-//        :: Nil))
-//        :: Nil) => Some(s"$result :: $xtype " + out.collect { case JString(s) => s}.mkString("\n", "\n", ""))
-//      case JObject(JField("error", JString(error)) :: Nil) => Some(error)
-//      case e => Some("unexpected: " + e)
-//    }
-//
-//    case Cmd("%" :: m :: Nil) => http.respond(sendLines).respondJSON(:/("tryruby.org") / "/levels/1/challenges/0" <:<
-//      Map("Accept" -> "application/json, text/javascript, */*; q=0.01",
-//        "Content-Type" -> "application/x-www-form-urlencoded; charset=UTF-8",
-//        "X-Requested-With" -> "XMLHttpRequest",
-//        "Connection" -> "keep-alive") <<< "cmd=" + java.net.URLEncoder.encode(m, "UTF-8")) {
-//      case JObject(JField("success", JBool(true)) :: JField("output", JString(output)) :: _) => Some(output)
-//      case JObject(JField("success", JBool(false)) :: _ :: JField("result", JString(output)) :: _) => Some(output)
-//      case e => Some("unexpected: " + e)
-//    }
-//
-//    case Cmd("i>" :: m :: Nil) => http.respond(sendLines).respondJSON(:/("tryidris.herokuapp.com") / "interpret" << compact(render("expression", m))) {
-//      case JArray(List(JArray(List(JString(":return"), JArray(List(JString(_), JString(output), _*)), _*)), _*)) => Some(output)
-//      case e => Some("unexpected: " + e)
-//    }
+    case Cmd("*clj" :: m :: Nil) => http.respond(sendLines).respondJSON(:/("www.tryclj.com") / "eval.json" <<? Map("expr" -> m)) {
+      case JObject(JField("expr", JString(_)) :: JField("result", JString(result)) :: Nil) => Some(result)
+      case JObject(JField("error", JBool(true)) :: JField("message", JString(message)) :: Nil) => Some(message)
+      case e => Some("unexpected: " + e)
+    }
+
+    case Cmd("*hs" :: m :: Nil) => http.respond(sendLines).respondJSON(:/("tryhaskell.org") / "eval" <<? Map("exp" -> m)) {
+      case JObject(
+      JField("success",
+      JObject(
+      JField("expr", JString(_))
+        :: JField("stdout", JArray(out))
+        :: JField("value", JString(result))
+        :: JField("files", _)
+        :: JField("type", JString(xtype))
+        :: Nil))
+        :: Nil) => Some(s"$result :: $xtype " + out.collect { case JString(s) => s}.mkString("\n", "\n", ""))
+      case JObject(JField("error", JString(error)) :: Nil) => Some(error)
+      case e => Some("unexpected: " + e)
+    }
+
+    case Cmd("*ruby" :: m :: Nil) => http.respond(sendLines).respondJSON(:/("tryruby.org") / "/levels/1/challenges/0" <:<
+      Map("Accept" -> "application/json, text/javascript, */*; q=0.01",
+        "Content-Type" -> "application/x-www-form-urlencoded; charset=UTF-8",
+        "X-Requested-With" -> "XMLHttpRequest",
+        "Connection" -> "keep-alive") <<< "cmd=" + java.net.URLEncoder.encode(m, "UTF-8")) {
+      case JObject(JField("success", JBool(true)) :: JField("output", JString(output)) :: _) => Some(output)
+      case JObject(JField("success", JBool(false)) :: _ :: JField("result", JString(output)) :: _) => Some(output)
+      case e => Some("unexpected: " + e)
+    }
+
+    case Cmd("*idris" :: m :: Nil) => http.respond(sendLines).respondJSON(:/("tryidris.herokuapp.com") / "interpret" << compact(render("expression", m))) {
+      case JArray(List(JArray(List(JString(":return"), JArray(List(JString(_), JString(output), _*)), _*)), _*)) => Some(output)
+      case e => Some("unexpected: " + e)
+    }
 //
 //    case Cmd("&" :: m :: Nil) =>
 //      val src = """
@@ -128,20 +131,20 @@ case class InterpretersHandler(
 //        case e => Some("unexpected: " + e)
 //      }
 //
-//    case Cmd("^" :: m :: Nil) => http.respond(sendLines).respondJSON2(:/("try-python.appspot.com") / "json" << compact(render(("method", "exec") ~("params", List(pythonSession, m)) ~ ("id" -> "null"))),
-//      :/("try-python.appspot.com") / "json" << compact(render(("method", "start_session") ~("params", List[String]()) ~ ("id" -> "null")))) {
-//      case JObject(JField("error", JNull) :: JField("id", JString("null")) :: JField("result", JObject(JField("text", JString(result)) :: _)) :: Nil) => Some(result)
-//      case e => Some("unexpected: " + e)
-//    } {
-//      case JObject(_ :: _ :: JField("result", JString(session)) :: Nil) => pythonSession = session; None
-//      case e => None
-//    }
-//
-//    case Cmd("##" :: m :: Nil) => http.respond(sendLines).respondJSON(:/("groovyconsole.appspot.com") / "executor.groovy" <<? Map("script" -> m), true) {
-//      case JObject(JField("executionResult", JString(result)) :: JField("outputText", JString(output)) :: JField("stacktraceText", JString("")) :: Nil) => Some(result.trim + "\n" + output.trim)
-//      case JObject(JField("executionResult", JString("")) :: JField("outputText", JString("")) :: JField("stacktraceText", JString(err)) :: Nil) => Some(err)
-//      case e => Some("unexpected" + e)
-//    }
+    case Cmd("*python" :: m :: Nil) => http.respond(sendLines).respondJSON2(:/("try-python.appspot.com") / "json" << compact(render(("method", "exec") ~("params", List(pythonSession, m)) ~ ("id" -> "null"))),
+      :/("try-python.appspot.com") / "json" << compact(render(("method", "start_session") ~("params", List[String]()) ~ ("id" -> "null")))) {
+      case JObject(JField("error", JNull) :: JField("id", JString("null")) :: JField("result", JObject(JField("text", JString(result)) :: _)) :: Nil) => Some(result)
+      case e => Some("unexpected: " + e)
+    } {
+      case JObject(_ :: _ :: JField("result", JString(session)) :: Nil) => pythonSession = session; None
+      case e => None
+    }
+
+    case Cmd("*groovy" :: m :: Nil) => http.respond(sendLines).respondJSON(:/("groovyconsole.appspot.com") / "executor.groovy" <<? Map("script" -> m), true) {
+      case JObject(JField("executionResult", JString(result)) :: JField("outputText", JString(output)) :: JField("stacktraceText", JString("")) :: Nil) => Some(result.trim + "\n" + output.trim)
+      case JObject(JField("executionResult", JString("")) :: JField("outputText", JString("")) :: JField("stacktraceText", JString(err)) :: Nil) => Some(err)
+      case e => Some("unexpected" + e)
+    }
 
     case _ =>
   }
