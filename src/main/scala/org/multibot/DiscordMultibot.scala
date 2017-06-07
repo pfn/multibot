@@ -64,6 +64,10 @@ case class DiscordMultibot(token: String) {
     override def handle(event: MessageEvent) = event match {
       case r: MessageReceivedEvent =>
         val m = r.getMessage
+        if (m.getContent == "*auth") {
+          m.reply(
+            s"Enable multi-bot on your discord: <https://discordapp.com/oauth2/authorize?client_id=${m.getClient.getOurUser.getStringID}&scope=bot&permissions=0>")
+        }
         if (m.getContent == "*help") {
           val nm = m.reply(
             """|```
