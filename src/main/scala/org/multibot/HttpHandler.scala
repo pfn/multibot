@@ -7,8 +7,6 @@ object :/ {
   def apply(host: String) = Request(host, None, Map.empty, Map.empty, None, false)
 }
 
-trait Handler
-
 case class Request(host: String, path: Option[String], headers: Map[String,String], query: Map[String,String], post: Option[String], file: Boolean) {
   def /(p: String) = copy(path = Some(path.fold(p) { parent => parent + "/" + p }))
   def <<?(query: Map[String, String]) = copy(query = query ++ query)
@@ -77,7 +75,10 @@ case class HttpHandler() {
       val source = io.Source.fromInputStream(uc.getInputStream)
       val lines = source.getLines.take(NUMLINES)
         (if (join) List(lines.mkString) else lines).foreach { line =>
-          sendMessage(channel, response(line).fold("")(l => l.split("\n").take(INNUMLINES).mkString("\n")))
+          response(line).foreach { l =>
+            val r = l.split("\n").take(INNUMLINES).mkString("\n")
+            sendMessage(channel, r)
+          }
       }
     }
   }

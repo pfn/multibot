@@ -41,40 +41,13 @@ case class InterpretersHandler(
     })
 
     case Cmd("*type" :: m :: Nil) => sendLines(msg.channel, cache.scalaInterpreter(msg.channel)((si, cout) => si.typeOfExpression(m).directObjectString))
-    case "*reset" => cache.scalaInt invalidate msg.channel
-    case "*reset-all" => cache.scalaInt.invalidateAll()
+    case "*reset" =>
+      cache.scalaInt invalidate msg.channel
+      cache.jsInt invalidate msg.channel
+    case "*reset-all" =>
+      cache.scalaInt.invalidateAll()
+      cache.jsInt.invalidateAll()
 
-//    case Cmd("!scalex" :: m :: Nil) => http.respond(sendLines).respondJSON(:/("api.scalex.org") <<? Map("q" -> m)) {
-//      json =>
-//        Some((
-//          for {
-//            JObject(obj) <- json
-//            JField("results", JArray(arr)) <- obj
-//            JObject(res) <- arr
-//            JField("resultType", JString(rtype)) <- res
-//
-//            JField("parent", JObject(parent)) <- res
-//            JField("name", JString(pname)) <- parent
-//            JField("typeParams", JString(ptparams)) <- parent
-//
-//            JField("name", JString(name)) <- res
-//            JField("typeParams", JString(tparams)) <- res
-//
-//            JField("comment", JObject(comment)) <- res
-//            JField("short", JObject(short)) <- comment
-//            JField("txt", JString(txt)) <- short
-//
-//            JField("valueParams", JString(vparams)) <- res
-//          } yield pname + ptparams + " " + name + tparams + ": " + vparams + ": " + rtype + " '" + txt + "'").mkString("\n"))
-//    }
-//
-//    case Cmd("!!" :: m :: Nil) => http.respond(sendLines).respond(:/("www.simplyscala.com") / "interp" <<? Map("bot" -> "irc", "code" -> m)) {
-//      case "warning: there were deprecation warnings; re-run with -deprecation for details" |
-//           "warning: there were unchecked warnings; re-run with -unchecked for details" |
-//           "New interpreter instance being created for you, this may take a few seconds." | "Please be patient." => None
-//      case line => Some(line.replaceAll("^res[0-9]+: ", ""))
-//    }
-//
     case Cmd("*clj" :: m :: Nil) => http.respond(sendLines).respondJSON(:/("www.tryclj.com") / "eval.json" <<? Map("expr" -> m)) {
       case JObject(JField("expr", JString(_)) :: JField("result", JString(result)) :: Nil) => Some(result)
       case JObject(JField("error", JBool(true)) :: JField("message", JString(message)) :: Nil) => Some(message)
@@ -110,33 +83,23 @@ case class InterpretersHandler(
       case JArray(List(JArray(List(JString(":return"), JArray(List(JString(_), JString(output), _*)), _*)), _*)) => Some(output)
       case e => Some("unexpected: " + e)
     }
-//
-//    case Cmd("&" :: m :: Nil) =>
-//      val src = """
-//                var http = require('http');
-//
-//                http.respond(sendLines).createServer(function (req, res) {
-//                  res.writeHead(200, {'Content-Type': 'text/plain'});
-//                  var a = (""" + m + """) + "";
-//                  res.end(a);
-//                }).listen();
-//                                     """
-//
-//      http.respond(sendLines).respondJSON((:/("jsapp.us") / "ajax" << compact(render(("actions", List(("action", "test") ~("code", src) ~("randToken", "3901") ~("fileName", ""))) ~("user", "null") ~("token", "null"))))) {
-//        case JObject(JField("user", JNull) :: JField("data", JArray(JString(data) :: Nil)) :: Nil) => var s: String = "";
-//          http.createHttpClient(url(data) >- {
-//            source => s = source
-//          })
-//          Some(s)
-//        case e => Some("unexpected: " + e)
-//      }
-//
-    case Cmd("*python" :: m :: Nil) => http.respond(sendLines).respondJSON2(:/("try-python.appspot.com") / "json" << compact(render(("method", "exec") ~("params", List(pythonSession, m)) ~ ("id" -> "null"))),
+    case Cmd("*js" :: m :: Nil) => sendLines(msg.channel, cache.jsInterpreter(msg.channel) { (ji, cout) =>
+      try {
+        val result = Option(ji eval inputSanitizer(m)).fold("")(_.toString)
+        val out = cout.toString
+        ((if (result.nonEmpty) "> " + result else "") + "\n" +
+          (if (out.nonEmpty) "out: " + out else "")).trim().take(1024)
+      } catch {
+        case e: javax.script.ScriptException => e.getMessage
+      }
+    })
+
+    case Cmd("*py" :: m :: Nil) => http.respond(sendLines).respondJSON2(:/("try-python.appspot.com") / "json" << compact(render(("method", "exec") ~("params", List(pythonSession, m)) ~ ("id" -> "null"))),
       :/("try-python.appspot.com") / "json" << compact(render(("method", "start_session") ~("params", List[String]()) ~ ("id" -> "null")))) {
       case JObject(JField("error", JNull) :: JField("id", JString("null")) :: JField("result", JObject(JField("text", JString(result)) :: _)) :: Nil) => Some(result)
       case e => Some("unexpected: " + e)
     } {
-      case JObject(_ :: _ :: JField("result", JString(session)) :: Nil) => pythonSession = session; None
+      case JObject(_ :: _ :: JField("result", JString(session)) :: Nil) => pythonSession = session; Some("> python session initialized, try again")
       case e => None
     }
 

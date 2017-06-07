@@ -27,6 +27,14 @@ case class InterpretersCache(preload: List[String]) {
 
   import scala.tools.nsc.interpreter.IMain
 
+  import javax.script.ScriptEngine
+  val jsInt = interpreterCache(new CacheLoader[String, ScriptEngine] {
+    override def load(key: String) = {
+      import javax.script.ScriptEngineManager
+      val em = new ScriptEngineManager
+      em.getEngineByName("nashorn")
+    }
+  })
   val scalaInt = interpreterCache(new CacheLoader[String, IMain] {
     override def load(key: String) = {
       val settings = new scala.tools.nsc.Settings(null)
@@ -52,7 +60,10 @@ case class InterpretersCache(preload: List[String]) {
     }
   })
   new Thread() {
-    override def run(): Unit = preload.foreach(scalaInt.get)
+    override def run(): Unit = {
+      preload.foreach(scalaInt.get)
+      preload.foreach(jsInt.get)
+    }
     start()
   }
 
@@ -66,6 +77,18 @@ case class InterpretersCache(preload: List[String]) {
     }
     scalaInt.cleanUp()
     println(s"scalas ${scalaInt.size()} memory free ${Runtime.getRuntime.freeMemory() / 1024 / 1024} of ${Runtime.getRuntime.totalMemory() / 1024 / 1024}")
+    r
+  }
+  def jsInterpreter(channel: String)(f: (ScriptEngine, ByteArrayOutputStream) => String) = this.synchronized {
+    import scala.concurrent.duration._
+    val si = jsInt.get(channel)
+    val r = DieOn.timeout(1.minute) {
+      ScriptSecurityManager.hardenPermissions(captureOutput {
+        f(si, conOut)
+      })
+    }
+    jsInt.cleanUp()
+    println(s"js ${jsInt.size()} memory free ${Runtime.getRuntime.freeMemory() / 1024 / 1024} of ${Runtime.getRuntime.totalMemory() / 1024 / 1024}")
     r
   }
 

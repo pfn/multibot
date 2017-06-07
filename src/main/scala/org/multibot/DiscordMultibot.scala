@@ -1,4 +1,5 @@
 package org.multibot
+import collection.JavaConverters._
 object DiscordMultibot {
   def main(args: Array[String]) {
     DiscordMultibot(java.lang.System.getenv("DISCORD_TOKEN"))
@@ -29,7 +30,6 @@ case class DiscordMultibot(token: String) {
       .split("\n")
       .filter(_.nonEmpty)
       .take(NUMLINES).mkString("\n") + "\n```"
-      
 
   def interp(m: IMessage, mode: Mode) = {
     val h = InterpretersHandler(
@@ -42,13 +42,20 @@ case class DiscordMultibot(token: String) {
             messages = messages.takeRight(32)
           case UPDATE =>
             messages.get(m.getLongID).foreach { msg =>
-              msg.edit(markdownOutputSanitizer(y))
+              val ms = msg.getMentions.asScala.map(_.mention).mkString(" ")
+              msg.edit(ms + " " + markdownOutputSanitizer(y))
             }
           case DELETE =>
         }
       },
       GitterInputSanitizer.sanitize)
-    h.serve(Msg("sender", "general", m.getContent))
+    DieOn.error {
+      try {
+        h.serve(Msg("general", "sender-ignored", m.getContent))
+      } catch {
+        case e: Exception => e.printStackTrace
+      }
+    }
   }
 
   val client = builder.login()
@@ -56,7 +63,29 @@ case class DiscordMultibot(token: String) {
   dispatcher.registerListener(new IListener[MessageEvent] {
     override def handle(event: MessageEvent) = event match {
       case r: MessageReceivedEvent =>
-        interp(r.getMessage, NEW)
+        val m = r.getMessage
+        if (m.getContent == "*help") {
+          val nm = m.reply(
+            """|```
+               |available commands:
+               |
+               | *scala     evaluate a scala expression
+               | *js        evaluate a javascript expression
+               | *ruby      evaluate a ruby expression
+               | *clj       evaluate a clojure expression
+               | *hs        evaluate a haskell expression
+               | *idris     evaluate a idris expression
+               | *py        evaluate a python expression
+               | *groovy    evaluate a groovy expression
+               | *type      describe the type of a scala expression
+               | *reset     reset javascript and scala evaluator state
+               | *help      duh
+               |```
+               |""".stripMargin)
+          messages += m.getLongID -> nm
+          messages = messages.takeRight(32)
+        }
+        interp(m, NEW)
       case d: MessageDeleteEvent =>
         messages.get(d.getMessage.getLongID).foreach { msg =>
           msg.delete()
