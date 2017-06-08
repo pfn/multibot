@@ -83,6 +83,7 @@ case class DiscordMultibot(token: String) {
                | *groovy    evaluate a groovy expression
                | *type      describe the type of a scala expression
                | *reset     reset javascript and scala evaluator state
+               | *auth      show discord authorization link for server invite
                | *help      duh
                |```
                |""".stripMargin)
