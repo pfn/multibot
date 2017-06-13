@@ -65,9 +65,7 @@ case class DiscordMultibot(token: String) {
     }
   }
 
-  val client = builder.login()
-  val dispatcher = client.getDispatcher
-  dispatcher.registerListener(new IListener[MessageEvent] {
+  builder.registerListener(new IListener[MessageEvent] {
     override def handle(event: MessageEvent) = event match {
       case r: MessageReceivedEvent =>
         val m = r.getMessage
@@ -111,4 +109,5 @@ case class DiscordMultibot(token: String) {
       case _ =>
     }
   })
+  builder.login()
 }
