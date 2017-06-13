@@ -18,7 +18,10 @@ case class DiscordMultibot(token: String) {
   case object UPDATE extends Mode
   case object DELETE extends Mode
   val NUMLINES = 5
-  val cache = InterpretersCache(List("general"))
+  val cache = InterpretersCache(
+    "228587804681175041" :: // PM pfn0
+    "205384125513859074" :: // r/ffbe
+    Nil)
   val builder = new ClientBuilder
   builder.withToken(token)
   var messages = ListMap.empty[Long,IMessage]
@@ -30,6 +33,10 @@ case class DiscordMultibot(token: String) {
       .split("\n")
       .filter(_.nonEmpty)
       .take(NUMLINES).mkString("\n") + "\n```"
+
+  def serverID(m: IMessage) = {
+    Option(m.getGuild).getOrElse(m.getAuthor).getStringID
+  }
 
   def interp(m: IMessage, mode: Mode) = {
     val h = InterpretersHandler(
@@ -51,7 +58,7 @@ case class DiscordMultibot(token: String) {
       GitterInputSanitizer.sanitize)
     DieOn.error {
       try {
-        h.serve(Msg("general", "sender-ignored", m.getContent))
+        h.serve(Msg(serverID(m), "sender-ignored", m.getContent))
       } catch {
         case e: Exception => e.printStackTrace
       }
@@ -64,6 +71,9 @@ case class DiscordMultibot(token: String) {
     override def handle(event: MessageEvent) = event match {
       case r: MessageReceivedEvent =>
         val m = r.getMessage
+        if (m.getContent == "*server") {
+          m.reply(s"Current server ID: ${serverID(m)}")
+        }
         if (m.getContent == "*auth") {
           m.reply(
             s"Enable multi-bot on your discord: <https://discordapp.com/oauth2/authorize?client_id=${m.getClient.getOurUser.getStringID}&scope=bot&permissions=0>")
@@ -73,18 +83,18 @@ case class DiscordMultibot(token: String) {
             """|```
                |available commands:
                |
-               | *scala     evaluate a scala expression
-               | *js        evaluate a javascript expression
-               | *ruby      evaluate a ruby expression
-               | *clj       evaluate a clojure expression
-               | *hs        evaluate a haskell expression
-               | *idris     evaluate a idris expression
-               | *py        evaluate a python expression
-               | *groovy    evaluate a groovy expression
-               | *type      describe the type of a scala expression
-               | *reset     reset javascript and scala evaluator state
-               | *auth      show discord authorization link for server invite
-               | *help      duh
+               | *scala, *s   evaluate a scala expression
+               | *js          evaluate a javascript expression
+               | *ruby, *rb   evaluate a ruby expression
+               | *clj         evaluate a clojure expression
+               | *hs          evaluate a haskell expression
+               | *idris       evaluate a idris expression
+               | *py          evaluate a python expression
+               | *groovy      evaluate a groovy expression
+               | *type        describe the type of a scala expression
+               | *reset       reset javascript and scala evaluator state
+               | *auth        show discord authorization link for server invite
+               | *help        duh
                |```
                |""".stripMargin)
           messages += m.getLongID -> nm

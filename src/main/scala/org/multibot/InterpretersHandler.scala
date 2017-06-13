@@ -33,7 +33,7 @@ case class InterpretersHandler(
   }
 
   def serve(implicit msg: Msg): Unit = msg.message match {
-    case Cmd("*scala" :: Sanitize(m) :: Nil) => sendLines(msg.channel, cache.scalaInterpreter(msg.channel) { (si, cout) =>
+    case Cmd(("*scala" | "*s") :: Sanitize(m) :: Nil) => sendLines(msg.channel, cache.scalaInterpreter(msg.channel) { (si, cout) =>
       import scala.tools.nsc.interpreter.Results._
 
       si interpret m match {
@@ -72,7 +72,7 @@ case class InterpretersHandler(
       case e => Some("unexpected: " + e)
     }
 
-    case Cmd("*ruby" :: Sanitize(m) :: Nil) => http.respond(sendLines).respondJSON(:/("tryruby.org") / "/levels/1/challenges/0" <:<
+    case Cmd(("*ruby" | "*rb") :: Sanitize(m) :: Nil) => http.respond(sendLines).respondJSON(:/("tryruby.org") / "/levels/1/challenges/0" <:<
       Map("Accept" -> "application/json, text/javascript, */*; q=0.01",
         "Content-Type" -> "application/x-www-form-urlencoded; charset=UTF-8",
         "X-Requested-With" -> "XMLHttpRequest",
