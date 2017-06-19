@@ -10,8 +10,9 @@ object ffbe {
   def rainbow_11(n: Int): String =
     f"${math.min(0.9999, rainbow_11_d(n)) * 100}%.02f%%"
 
-  def healing(ratio: Double, spr: Int, mag: Int): Int =
-    (ratio * (spr * 0.5 + mag * 0.1)).toInt
+  def healing(ratio: Double, spr: Int, mag: Int,
+    base: Int = 0, turns: Int = 1): Int =
+      (ratio * (spr * 0.5 + mag * 0.1) + base).toInt / turns
 
   def ignore_def(ratio: Double, ignore: Double): String =
     f"${ratio / (1 - ignore)}%.02f"
