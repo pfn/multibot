@@ -3,6 +3,42 @@ import collection.JavaConverters._
 object DiscordMultibot {
   def main(args: Array[String]) {
     DiscordMultibot(java.lang.System.getenv("DISCORD_TOKEN"))
+    //println(ffbehelp())
+  }
+  def defparam(m: reflect.runtime.universe.Mirror,
+    ffbe: reflect.runtime.universe.ModuleSymbol,
+    name: String, pos: Int): String = {
+    val u = reflect.runtime.universe.asInstanceOf[
+      reflect.internal.SymbolTable with reflect.internal.StdNames]
+    val n = reflect.runtime.universe.TermName(u.nme.defaultGetterName(u.TermName(name), pos).toString)
+    val mem = ffbe.typeSignature.member(reflect.runtime.universe.TermName(u.nme.defaultGetterName(u.TermName(name), pos + 1).toString))
+    val im = m.reflect(m.reflectModule(ffbe).instance)
+    im.reflectMethod(mem.asMethod)().toString
+  }
+
+  def mapParams(m: reflect.runtime.universe.Mirror,
+    ffbe: reflect.runtime.universe.ModuleSymbol,
+    name: String,
+    xs: List[reflect.runtime.universe.Symbol]): String = {
+    "(" + xs.zipWithIndex.map { case(p, i) =>
+      (if (p.asTerm.isParamWithDefault) {
+        s"[${p.name.toString} = ${defparam(m, ffbe, name, i)}]"
+      } else {
+        p.name.toString
+      })
+    }.mkString(", ") + ")"
+  }
+  def ffbehelp(): String = {
+    import reflect.runtime.universe._
+    val m = runtimeMirror(this.getClass.getClassLoader)
+    val ffbe = m.staticModule("ffbe")
+    "```scala\n" +
+    m.staticModule("ffbe").typeSignature.members.filter(s =>
+      s.isMethod && s.isPublic && !s.isSynthetic &&
+        s.asMethod.paramLists.nonEmpty &&
+          s.asMethod.paramLists.head.nonEmpty &&
+            s.owner.name.toString == "ffbe").map(s =>
+              "  " + s.fullName + mapParams(m, ffbe, s.name.toString, s.asMethod.paramLists.head)).mkString("\n") + "\n```"
   }
 }
 case class DiscordMultibot(token: String) {
@@ -65,6 +101,7 @@ case class DiscordMultibot(token: String) {
     }
   }
 
+
   builder.registerListener(new IListener[MessageEvent] {
     override def handle(event: MessageEvent) = event match {
       case r: MessageReceivedEvent =>
@@ -75,6 +112,11 @@ case class DiscordMultibot(token: String) {
         if (m.getContent == "*auth") {
           m.reply(
             s"Enable multi-bot on your discord: <https://discordapp.com/oauth2/authorize?client_id=${m.getClient.getOurUser.getStringID}&scope=bot&permissions=0>")
+        }
+        if (m.getContent == "*ffbe") {
+          val nm = m.reply(DiscordMultibot.ffbehelp())
+          messages += m.getLongID -> nm
+          messages = messages.takeRight(32)
         }
         if (m.getContent == "*help") {
           val nm = m.reply(
