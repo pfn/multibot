@@ -2,8 +2,8 @@ object ffbe {
   private[this] val rainbow11 = 1 - (0.95 * math.pow(0.99, 10))
 
   private[this] def rainbow_11_d(n: Int): Double = n match {
-    case 0 => 0.0
     case 1 => rainbow11
+    case x if x < 1 => 0.0
     case _ => 1 - (1 - rainbow_11_d(n - 1)) * (1 - rainbow11)
   }
 
