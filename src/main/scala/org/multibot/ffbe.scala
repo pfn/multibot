@@ -107,10 +107,10 @@ object ffbe {
       physical(atk - r,
         ratio, killer, elemental, 0, defs, itd, false, level, 0) +
           physical(atk - l,
-            ratio, killer, elemental, relemental, defs, itd, false, level, 0)
+            ratio, killer, elemental + relemental, 0, defs, itd, false, level, 0)
     } else {
       ((math.pow(atk, 2) / (defs * (1 - itd))).toInt *
-        (1 + killer) * math.max(0, (1 + elemental + relemental)) *
+        (1 + killer) * math.max(0, (1 + elemental)) *
           (1 + (level / 100)) * ratio).toInt
     }
   }
