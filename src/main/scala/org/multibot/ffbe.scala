@@ -22,6 +22,8 @@ object ffbe {
       s"(min = $min, avg = $avg, max = $max)"
     def *(factor: Double) = Variance((min * factor).toInt,
       (avg * factor).toInt, (max * factor).toInt)
+    def /(factor: Double) = Variance((min / factor).toInt,
+      (avg / factor).toInt, (max / factor).toInt)
   }
 
   def variance(min: Double, max: Double, value: Int): Variance = {
@@ -119,6 +121,9 @@ object ffbe {
     def *(factor: Double) =
       Hybrid((physical * factor).toInt, (magical * factor).toInt,
         (hybrid * factor).toInt)
+    def /(factor: Double) =
+      Hybrid((physical / factor).toInt, (magical / factor).toInt,
+        (hybrid / factor).toInt)
   }
 
   def hybrid(
