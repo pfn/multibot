@@ -33,6 +33,12 @@ object ffbe {
       ((math.abs(max - min)/2 + math.min(max,min)) * value.avg).toInt,
       (value.max * math.max(min, max)).toInt)
   }
+  def variance(min: Double, max: Double, value: Hybrid): Variance = {
+    Variance((value.physical * math.min(min, max)).toInt + value.magical,
+      ((math.abs(max - min)/2 + math.min(max,min)) * value.physical).toInt +
+        value.magical,
+      (value.physical * math.max(min, max)).toInt + value.magical)
+  }
 
   def tmr(nrg: Int, seconds: Int = 36): String =
     s"${(10000 - ((10000 / (3600 / seconds)) * 12)) / nrg * 100} lapis"
@@ -100,6 +106,7 @@ object ffbe {
     override def toString =
       s"Hybrid(physical = $physical, magical = $magical, hybrid = $hybrid)"
   }
+
   def hybrid(
     atk:        Int,
     mag:        Int,

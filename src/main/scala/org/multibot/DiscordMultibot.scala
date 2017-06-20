@@ -10,8 +10,9 @@ object DiscordMultibot {
     name: String, pos: Int): String = {
     val u = reflect.runtime.universe.asInstanceOf[
       reflect.internal.SymbolTable with reflect.internal.StdNames]
-    val n = reflect.runtime.universe.TermName(u.nme.defaultGetterName(u.TermName(name), pos).toString)
-    val mem = ffbe.typeSignature.member(reflect.runtime.universe.TermName(u.nme.defaultGetterName(u.TermName(name), pos + 1).toString))
+    val n = reflect.runtime.universe.TermName(
+      u.nme.defaultGetterName(u.TermName(name), pos + 1).toString)
+    val mem = ffbe.typeSignature.member(n)
     val im = m.reflect(m.reflectModule(ffbe).instance)
     im.reflectMethod(mem.asMethod)().toString
   }
@@ -33,12 +34,20 @@ object DiscordMultibot {
     val m = runtimeMirror(this.getClass.getClassLoader)
     val ffbe = m.staticModule("ffbe")
     "```scala\n" +
-    m.staticModule("ffbe").typeSignature.members.filter(s =>
+    ffbe.typeSignature.members.filter(s =>
       s.isMethod && s.isPublic && !s.isSynthetic &&
         s.asMethod.paramLists.nonEmpty &&
           s.asMethod.paramLists.head.nonEmpty &&
-            s.owner.name.toString == "ffbe").map(s =>
-              "  " + s.fullName + mapParams(m, ffbe, s.name.toString, s.asMethod.paramLists.head)).mkString("\n") + "\n```"
+            s.owner.name.toString == "ffbe").foldLeft(
+              (Set.empty[String],List.empty[String])) { case((seen,ac),s) =>
+                if (seen(s.name.toString)) (seen,ac)
+                else (
+                  seen + s.name.toString,
+                    "  " + s.fullName +
+                      mapParams(m, ffbe, s.name.toString,
+                        s.asMethod.paramLists.head) +
+                          ": " + s.asMethod.returnType :: ac)
+              }._2.mkString("\n") + "\n```"
   }
 }
 case class DiscordMultibot(token: String) {
@@ -52,7 +61,6 @@ case class DiscordMultibot(token: String) {
   sealed trait Mode
   case object NEW    extends Mode
   case object UPDATE extends Mode
-  case object DELETE extends Mode
   val NUMLINES = 5
   val cache = InterpretersCache(
     "228587804681175041" :: // PM pfn0
@@ -74,6 +82,13 @@ case class DiscordMultibot(token: String) {
     Option(m.getGuild).getOrElse(m.getAuthor).getStringID
   }
 
+  def associateMessage(incoming: IMessage, response: IMessage) {
+    messages += incoming.getLongID-> response
+    messages = messages.takeRight(32)
+  }
+
+  def messageById(id: Long): Option[IMessage] = messages.get(id)
+
   def interp(m: IMessage, mode: Mode) = {
     val h = InterpretersHandler(
       cache, HttpHandler(),
@@ -81,14 +96,12 @@ case class DiscordMultibot(token: String) {
         mode match {
           case NEW =>
             val newmessage = m.reply(markdownOutputSanitizer(y))
-            messages += m.getLongID -> newmessage
-            messages = messages.takeRight(32)
+            associateMessage(m, newmessage)
           case UPDATE =>
-            messages.get(m.getLongID).foreach { msg =>
+            messageById(m.getLongID).foreach { msg =>
               val ms = msg.getMentions.asScala.map(_.mention).mkString(" ")
               msg.edit(ms + " " + markdownOutputSanitizer(y))
             }
-          case DELETE =>
         }
       },
       GitterInputSanitizer.sanitize)
@@ -106,43 +119,44 @@ case class DiscordMultibot(token: String) {
     override def handle(event: MessageEvent) = event match {
       case r: MessageReceivedEvent =>
         val m = r.getMessage
-        if (m.getContent == "*server") {
-          m.reply(s"Current server ID: ${serverID(m)}")
+        val newmessage = m.getContent match {
+          case "*source" =>
+            Some(m.reply("You can find my sources at: <https://github.com/pfn/multibot>"))
+          case "*server" =>
+            Some(m.reply(s"Current server ID: ${serverID(m)}"))
+          case "*auth" =>
+            Some(m.reply(
+              s"Enable multi-bot on your discord: <https://discordapp.com/oauth2/authorize?client_id=${m.getClient.getOurUser.getStringID}&scope=bot&permissions=0>"))
+          case "*ffbe" =>
+            Some(m.reply(DiscordMultibot.ffbehelp()))
+          case "*help" =>
+            Some(m.reply(
+              """|```
+                 |available commands:
+                 |
+                 | *scala, *s   evaluate a scala expression
+                 | *source      show link to github sources
+                 | *ffbe        list functions available in `*s ffbe`
+                 | *js          evaluate a javascript expression
+                 | *ruby, *rb   evaluate a ruby expression
+                 | *clj         evaluate a clojure expression
+                 | *hs          evaluate a haskell expression
+                 | *idris       evaluate a idris expression
+                 | *py          evaluate a python expression
+                 | *groovy      evaluate a groovy expression
+                 | *type        describe the type of a scala expression
+                 | *reset       reset javascript and scala evaluator state
+                 | *auth        show discord authorization link for server invite
+                 | *help        duh
+                 |```
+                 |""".stripMargin))
+          case _ =>
+            interp(m, NEW)
+            None
         }
-        if (m.getContent == "*auth") {
-          m.reply(
-            s"Enable multi-bot on your discord: <https://discordapp.com/oauth2/authorize?client_id=${m.getClient.getOurUser.getStringID}&scope=bot&permissions=0>")
-        }
-        if (m.getContent == "*ffbe") {
-          val nm = m.reply(DiscordMultibot.ffbehelp())
-          messages += m.getLongID -> nm
-          messages = messages.takeRight(32)
-        }
-        if (m.getContent == "*help") {
-          val nm = m.reply(
-            """|```
-               |available commands:
-               |
-               | *scala, *s   evaluate a scala expression
-               | *js          evaluate a javascript expression
-               | *ruby, *rb   evaluate a ruby expression
-               | *clj         evaluate a clojure expression
-               | *hs          evaluate a haskell expression
-               | *idris       evaluate a idris expression
-               | *py          evaluate a python expression
-               | *groovy      evaluate a groovy expression
-               | *type        describe the type of a scala expression
-               | *reset       reset javascript and scala evaluator state
-               | *auth        show discord authorization link for server invite
-               | *help        duh
-               |```
-               |""".stripMargin)
-          messages += m.getLongID -> nm
-          messages = messages.takeRight(32)
-        }
-        interp(m, NEW)
+        newmessage.foreach(n => associateMessage(m, n))
       case d: MessageDeleteEvent =>
-        messages.get(d.getMessage.getLongID).foreach { msg =>
+        messageById(d.getMessage.getLongID).foreach { msg =>
           msg.delete()
         }
         messages -= d.getMessage.getLongID
