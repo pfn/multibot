@@ -17,6 +17,23 @@ object ffbe {
   def ignore_def(ratio: Double, ignore: Double): String =
     f"${ratio / (1 - ignore)}%.02f"
 
+  case class Variance(min: Int, avg: Int, max: Int) {
+    override def toString =
+      s"Variance(min = $min, avg = $avg, max = $max)"
+  }
+
+  def variance(min: Double, max: Double, value: Int): Variance = {
+    Variance((value * math.min(min, max)).toInt,
+      ((math.abs(max - min)/2 + math.min(max,min)) * value).toInt,
+      (value * math.max(min, max)).toInt)
+  }
+
+  def variance(min: Double, max: Double, value: Variance): Variance = {
+    Variance((value.min * math.min(min, max)).toInt,
+      ((math.abs(max - min)/2 + math.min(max,min)) * value.avg).toInt,
+      (value.max * math.max(min, max)).toInt)
+  }
+
   def tmr(nrg: Int, seconds: Int = 36): String =
     s"${(10000 - ((10000 / (3600 / seconds)) * 12)) / nrg * 100} lapis"
 
