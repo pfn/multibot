@@ -19,7 +19,9 @@ object ffbe {
 
   case class Variance(min: Int, avg: Int, max: Int) {
     override def toString =
-      s"Variance(min = $min, avg = $avg, max = $max)"
+      s"(min = $min, avg = $avg, max = $max)"
+    def *(factor: Double) = Variance((min * factor).toInt,
+      (avg * factor).toInt, (max * factor).toInt)
   }
 
   def variance(min: Double, max: Double, value: Int): Variance = {
@@ -39,6 +41,15 @@ object ffbe {
         value.magical,
       (value.physical * math.max(min, max)).toInt + value.magical)
   }
+
+  def fvariance(min: Double, max: Double, value: Int): Variance = {
+    variance(0.85, 1, variance(min, max, value))
+  }
+
+  def fvariance(min: Double, max: Double, value: Hybrid): Variance = {
+    variance(0.85, 1, variance(min, max, value))
+  }
+
 
   def tmr(nrg: Int, seconds: Int = 36): String =
     s"${(10000 - ((10000 / (3600 / seconds)) * 12)) / nrg * 100} lapis"
@@ -104,7 +115,10 @@ object ffbe {
 
   case class Hybrid(physical: Int, magical: Int, hybrid: Int) {
     override def toString =
-      s"Hybrid(physical = $physical, magical = $magical, hybrid = $hybrid)"
+      s"(physical = $physical, magical = $magical, hybrid = $hybrid)"
+    def *(factor: Double) =
+      Hybrid((physical * factor).toInt, (magical * factor).toInt,
+        (hybrid * factor).toInt)
   }
 
   def hybrid(
