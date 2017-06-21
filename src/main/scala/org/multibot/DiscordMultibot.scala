@@ -20,12 +20,17 @@ object DiscordMultibot {
   def mapParams(m: reflect.runtime.universe.Mirror,
     ffbe: reflect.runtime.universe.ModuleSymbol,
     name: String,
-    xs: List[reflect.runtime.universe.Symbol]): String = {
+    xs: List[reflect.runtime.universe.Symbol],
+    withtype: Boolean = false): String = {
     "(" + xs.zipWithIndex.map { case(p, i) =>
       (if (p.asTerm.isParamWithDefault) {
-        s"[${p.name.toString} = ${defparam(m, ffbe, name, i)}]"
+        if (withtype)
+          s"[${p.name.toString}: ${p.typeSignature} = ${defparam(m, ffbe, name, i)}]"
+        else s"[${p.name.toString} = ${defparam(m, ffbe, name, i)}]"
       } else {
-        p.name.toString
+        if (withtype)
+          p.name.toString + ": " + p.typeSignature
+        else p.name.toString
       })
     }.mkString(", ") + ")"
   }
