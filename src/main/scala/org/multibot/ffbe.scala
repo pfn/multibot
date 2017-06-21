@@ -147,9 +147,9 @@ object ffbe {
     l:          Int     = 0,
     r:          Int     = 0): Int = {
     if (dw) {
-      physical(atk - r,
+      physical(atk - l,
         ratio, killer, elemental, 0, defs, itd, false, level, 0) +
-          physical(atk - l,
+          physical(atk - r,
             ratio, killer, elemental + elemental2, 0, defs, itd, false, level, 0)
     } else {
       ((math.pow(atk, 2) / (defs * (1 - itd))).toInt *
@@ -188,10 +188,10 @@ object ffbe {
     l:          Int     = 0,
     r:          Int     = 0): Hybrid = {
     if (dw) {
-      val Hybrid(p1, m1, h1) = hybrid(atk - r,
+      val Hybrid(p1, m1, h1) = hybrid(atk - l,
         mag, ratio, killer, elemental, 0, defs, spr, itd, its, false, level)
 
-      val Hybrid(p2, m2, h2) = hybrid(atk - l,
+      val Hybrid(p2, m2, h2) = hybrid(atk - r,
         mag, ratio, killer, elemental + elemental2,
           0, defs, spr, itd, its, false, level)
       Hybrid(p1+p2, m1+m2, h1+h2)
