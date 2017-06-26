@@ -100,7 +100,8 @@ case class DiscordMultibot(token: String) {
       (x, y) => {
         mode match {
           case NEW =>
-            val newmessage = m.reply(markdownOutputSanitizer(y))
+            val ms = m.getMentions.asScala.foldLeft("") { (ac,s) => s.mention + " " + ac }
+            val newmessage = m.reply(ms + markdownOutputSanitizer(y))
             associateMessage(m, newmessage)
           case UPDATE =>
             messageById(m.getLongID).foreach { msg =>
