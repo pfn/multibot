@@ -55,8 +55,7 @@ object ffbe {
       (ratio * (spr * 0.5 + mag * 0.1) + base).toInt / turns
 
   @doc("calculate the effective ratio of a skill given `ignore` def/spr")
-  def ignore_def(ratio: Double, ignore: Double): String =
-    f"${ratio / (1 - ignore)}%.02f"
+  def ignore_def(ratio: Double, ignore: Double) = ratio / (1 - ignore)
 
   case class Variance(min: Int, avg: Int, max: Int) {
     override def toString =
