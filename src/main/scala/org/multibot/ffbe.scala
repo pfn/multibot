@@ -96,6 +96,11 @@ object ffbe {
     variance(0.85, 1, variance(min, max, value))
   }
 
+  def fvariance(value: Int): Variance = variance(0.85, 1, value)
+
+  @doc("Calculate the damage of an esper, stats=atk+mag+def+spr of esper")
+  def esper(stats: Double, ratio: Double, defs: Int = 10) =
+    ((math.pow(0.01 * stats.toInt, 2)/defs).toInt * ratio).toInt
 
   @doc("Calculate the lapis cost to farm 0-100% trust given max `nrg` and `seconds` runtime")
   def tmr(nrg: Int, seconds: Int = 36): String =
