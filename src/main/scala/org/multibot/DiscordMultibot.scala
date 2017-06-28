@@ -2,7 +2,16 @@ package org.multibot
 import collection.JavaConverters._
 object DiscordMultibot {
   def main(args: Array[String]) {
-    DiscordMultibot(java.lang.System.getenv("DISCORD_TOKEN"))
+    import sx.blah.discord.Discord4J
+    val getenv = java.lang.System.getenv(_: String)
+    if (getenv("DISCORD_TRACE") == "true") Discord4J.LOGGER match {
+      case d: Discord4J.Discord4JLogger =>
+        d.setLevel(Discord4J.Discord4JLogger.Level.TRACE)
+      case _ =>
+        System.setProperty(
+          org.slf4j.impl.SimpleLogger.DEFAULT_LOG_LEVEL_KEY, "TRACE")
+    }
+    DiscordMultibot(getenv("DISCORD_TOKEN"))
     //println(ffbehelp())
   }
   def defparam(m: reflect.runtime.universe.Mirror,
@@ -121,7 +130,6 @@ case class DiscordMultibot(token: String) {
       }
     }
   }
-
 
   builder.registerListener(new IListener[MessageEvent] {
     override def handle(event: MessageEvent) = event match {
