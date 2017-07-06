@@ -189,11 +189,11 @@ object ffbe {
         }.getOrElse(ac + ChainGraph(Set(2), y))
       }
       (headOffset + i) -> chained.tail.foldLeft((List.empty[Char],chained.head)) { case ((ac,last),g) =>
-        val sym = if (math.abs(last.frame - g.frame) > 20) fill
-        else if (last.source.size == 1 && g.source.size == 1 && last.source == g.source) bad
-        else if (g.source.size > 1) spark
-        else good
-        (sym :: ac, g)
+        val sym = if (math.abs(last.frame - g.frame) > 20) fill :: Nil
+        else if (last.source.size == 1 && g.source.size == 1 && last.source == g.source) bad :: Nil
+        else if (g.source.size > 1) spark :: good :: Nil
+        else good :: Nil
+        (sym ++ ac, g)
       }._1.reverse.mkString :: Nil
     }
     println(res.sortBy(_._2.count(c => c == bad || c == fill)).take(range).map { case (off,s) => " " + off + ": " + s }.mkString("\n"))
