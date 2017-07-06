@@ -75,7 +75,7 @@ case class DiscordMultibot(token: String) {
   sealed trait Mode
   case object NEW    extends Mode
   case object UPDATE extends Mode
-  val NUMLINES = 5
+  val NUMLINES = 7
   val cache = InterpretersCache(
     "228587804681175041" :: // PM pfn0
     "205384125513859074" :: // r/ffbe

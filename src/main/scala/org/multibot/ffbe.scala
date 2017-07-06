@@ -143,11 +143,14 @@ object ffbe {
     val dr = chain_frames("70,7,5,7,7,7,7")
     val ffb = chain_frames("40,7,5,7,7,7,7", cast=8)
     val qt = chain_frames("22,5,5,5,5,5,5,5,5,5,5,20", cast=20)
-    println(solve_chain(dr, ffb))
+    val bs = chain_frames("40-25-25-25-25-25-25-25-25")
+    solve_chain(dr, ffb)
     println("---")
-    println(solve_chain(dr, dr))
+    solve_chain(dr, dr)
     println("---")
-    println(solve_chain(qt, qt))
+    solve_chain(qt, qt)
+    println("---")
+    solve_chain(bs, bs)
   }
   */
 
@@ -158,7 +161,7 @@ object ffbe {
     }
   }
   @doc("Solve the outputs of `chain_frames` for chainability")
-  def solve_chain(xs: List[Int], ys: List[Int]): String = {
+  def solve_chain(xs: List[Int], ys: List[Int]) {
     val good  = '\u2714'
     val bad   = '\u274c'
     val fill  = '\u2610'
@@ -191,9 +194,9 @@ object ffbe {
         else if (g.source.size > 1) spark
         else good
         (sym :: ac, g)
-      }._1.reverse.mkString(" ") :: Nil
+      }._1.reverse.mkString :: Nil
     }
-    res.sortBy(_._2.count(c => c == bad || c == fill)).reverse.take(range).sortBy(_._1).map { case (off,s) => " " + off + ": " + s }.mkString("\n")
+    println(res.sortBy(_._2.count(c => c == bad || c == fill)).take(range).map { case (off,s) => " " + off + ": " + s }.mkString("\n"))
   }
 
   @doc("Calculate damage given inputs, `its` = ignore spr")
