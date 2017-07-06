@@ -111,10 +111,10 @@ object ffbe {
     spark: Boolean = false): Stream[Double] = {
     val bonus  = elements * 0.2 + 0.1
 
-    Stream.from(0).zipWithIndex.map { case (m,i) =>
+    1 #:: chain_stream(elements, spark).zipWithIndex.map { case (m,i) =>
       // in a normal chain, only every other hit can receive spark bonus
-      val b = if (i % 2 == 1 && spark) bonus + 0.2 else bonus
-      math.min(m * b + 1, 4.0)
+      val b = if (i % 2 == 0 && spark) bonus + 0.3 else bonus
+      math.min(m + b, 4.0)
     }
   }
 
