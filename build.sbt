@@ -41,18 +41,15 @@ libraryDependencies ++= {
     "com.github.julien-truffaut" %% "monocle-macro" % monocleVersion,
     "org.spire-math" %% "spire" % spireVersion,
     "org.scalaz.stream" %% "scalaz-stream" % scalazStreamVersion,
-    "com.github.austinv11" % "Discord4J" % "2.8.3"
+    "com.github.austinv11" % "Discord4J" % "2.8.4"
 //    "org.pelotom" %% "effectful" % "1.1-SNAPSHOT"
   )
 }
 
 libraryDependencies ++= Seq(
-  "org.pircbotx" % "pircbotx" % "2.1",
   "org.slf4j" % "slf4j-simple" % "1.7.10",
   "org.scala-lang" % "scala-compiler" % scalaVersion.value,
   "org.scala-lang" % "scala-reflect" % scalaVersion.value,
-  "org.http4s" %% "http4s-client" % "0.15.0a",
-  "org.json4s" %% "json4s-native" % "3.5.0",
   "com.google.guava" % "guava" % "18.0",
   "org.scalactic" %% "scalactic" % "3.0.1",
   "org.scalatest" %% "scalatest" % "3.0.1" % "test"

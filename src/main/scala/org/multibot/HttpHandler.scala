@@ -1,7 +1,9 @@
 package org.multibot
 
+/*
 import org.json4s.JsonAST.JValue
 import org.json4s.native.JsonParser
+*/
 
 object :/ {
   def apply(host: String) = Request(host, None, Map.empty, Map.empty, None, false)
@@ -35,6 +37,7 @@ case class Request(host: String, path: Option[String], headers: Map[String,Strin
   }
 }
 
+/*
 case class HttpHandler() {
   private val NUMLINES = 5
   private val INNUMLINES = 8
@@ -83,3 +86,4 @@ case class HttpHandler() {
     }
   }
 }
+*/

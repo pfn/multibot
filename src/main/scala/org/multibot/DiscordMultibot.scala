@@ -105,7 +105,7 @@ case class DiscordMultibot(token: String) {
 
   def interp(m: IMessage, mode: Mode) = {
     val h = InterpretersHandler(
-      cache, HttpHandler(),
+      cache, /*HttpHandler(),*/
       (x, y) => {
         mode match {
           case NEW =>
@@ -145,6 +145,9 @@ case class DiscordMultibot(token: String) {
               s"Enable multi-bot on your discord: <https://discordapp.com/oauth2/authorize?client_id=${m.getClient.getOurUser.getStringID}&scope=bot&permissions=0>"))
           case "*ffbe" =>
             Some(m.reply(DiscordMultibot.ffbehelp()))
+          case "*guilds" =>
+            Some(m.reply(
+              s"Connected guilds: ${m.getClient.getGuilds.asScala.map(_.getName).mkString(", ")}"))
           case "*help" =>
             Some(m.reply(
               """|```
@@ -154,12 +157,6 @@ case class DiscordMultibot(token: String) {
                  | *source      show link to github sources
                  | *ffbe        list functions available in `*s ffbe`
                  | *js          evaluate a javascript expression
-                 | *ruby, *rb   evaluate a ruby expression
-                 | *clj         evaluate a clojure expression
-                 | *hs          evaluate a haskell expression
-                 | *idris       evaluate a idris expression
-                 | *py          evaluate a python expression
-                 | *groovy      evaluate a groovy expression
                  | *type        describe the type of a scala expression
                  | *reset       reset javascript and scala evaluator state
                  | *auth        show discord authorization link for server invite

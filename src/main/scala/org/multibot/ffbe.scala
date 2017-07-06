@@ -98,7 +98,7 @@ object ffbe {
 
   def fvariance(value: Int): Variance = variance(0.85, 1, value)
 
-  @doc("Calculate the damage of an esper, stats=atk+mag+def+spr of esper")
+  @doc("[WRONG] Calculate the damage of an esper, stats=atk+mag+def+spr of esper")
   def esper(stats: Double, ratio: Double, defs: Int = 10) =
     ((math.pow(0.01 * stats.toInt, 2)/defs).toInt * ratio).toInt
 
