@@ -163,7 +163,7 @@ object ffbe {
   @doc("Solve the outputs of `chain_frames` for chainability")
   def solve_chain(xs: List[Int], ys: List[Int]) {
     val good  = '\u2714'
-    val bad   = '\u274c'
+    val bad   = '\u2716'
     val fill  = '\u2610'
     val spark = '\u26a1'
     val (headOffset,range) = (for {
