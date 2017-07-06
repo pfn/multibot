@@ -162,10 +162,10 @@ object ffbe {
   }
   @doc("Solve the outputs of `chain_frames` for chainability")
   def solve_chain(xs: List[Int], ys: List[Int]) {
-    val good  = '\u2714'
-    val bad   = '\u2716'
-    val fill  = '\u2610'
-    val spark = '\u26a1'
+    val good  = 'X'
+    val bad   = 'O'
+    val fill  = '_'
+    val spark = '*'
     val (headOffset,range) = (for {
       x <- xs.headOption
       y <- ys.headOption
