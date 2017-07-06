@@ -124,6 +124,78 @@ object ffbe {
     hits: Int, elements: Int = 1, spark: Boolean = false): Double =
       chain_stream(elements, spark).take(hits).sum / hits
 
+  @doc("Generate a list of hitframes for given `frames`, count=2 for dual-wield, cast is (xx) or 8 when 0, walk is unknown")
+  def chain_frames(frames: String,
+    cast: Int = 40, walk: Int = 0, count: Int = 2): List[Int] = {
+    val basecast = 16
+    val fs = frames.split("[:,-]").map(s => util.Try(s.toInt)).collect {
+      case util.Success(i) => i
+    }.toList
+    val first = fs.take(1).headOption.getOrElse(0)
+    (0 until count).flatMap { i =>
+      val init = first + basecast + walk + (i * (basecast + cast + walk))
+      fs.tail.scanLeft(init) { (ac, f) => ac + f }
+    }.toList.sorted
+  }
+
+/*
+  def test() {
+    val dr = chain_frames("70,7,5,7,7,7,7")
+    val ffb = chain_frames("40,7,5,7,7,7,7", cast=8)
+    val qt = chain_frames("22,5,5,5,5,5,5,5,5,5,5,20", cast=20)
+    println(solve_chain(dr, ffb))
+    println("---")
+    println(solve_chain(dr, dr))
+    println("---")
+    println(solve_chain(qt, qt))
+  }
+  */
+
+  case class ChainGraph(source: Set[Int], frame: Int)
+  object ChainGraph {
+    implicit val chainGraphOrdering = new Ordering[ChainGraph] {
+      override def compare(x: ChainGraph, y: ChainGraph) = x.frame - y.frame
+    }
+  }
+  @doc("Solve the outputs of `chain_frames` for chainability")
+  def solve_chain(xs: List[Int], ys: List[Int]): String = {
+    val good  = '\u2714'
+    val bad   = '\u274c'
+    val fill  = '\u2610'
+    val spark = '\u26a1'
+    val (headOffset,range) = (for {
+      x <- xs.headOption
+      y <- ys.headOption
+      z <- xs.tail.headOption
+    } yield (1 + x - y, math.abs(x - z))).getOrElse((0,0))
+    val lastOffset = (for {
+      x <- xs.lastOption
+      y <- ys.lastOption
+    } yield 1 + x - y).getOrElse(0)
+
+    val res: List[(Int, String)] = (0 until range).toList.flatMap { i =>
+      val startAlign = ys.map(_ + headOffset + i)
+      val endAlign = ys.map(_ + lastOffset + i)
+      import collection.immutable.TreeSet
+      val graph = xs.foldLeft(TreeSet.empty[ChainGraph]) { (ac, x) =>
+        ac + ChainGraph(Set(1), x)
+      }
+      val chained = startAlign.foldLeft(graph) { (ac,y) =>
+        ac.find(_.frame == y).map { f =>
+          ac - f + f.copy(source = f.source + 2)
+        }.getOrElse(ac + ChainGraph(Set(2), y))
+      }
+      (headOffset + i) -> chained.tail.foldLeft((List.empty[Char],chained.head)) { case ((ac,last),g) =>
+        val sym = if (math.abs(last.frame - g.frame) > 20) fill
+        else if (last.source.size == 1 && g.source.size == 1 && last.source == g.source) bad
+        else if (g.source.size > 1) spark
+        else good
+        (sym :: ac, g)
+      }._1.reverse.mkString(" ") :: Nil
+    }
+    res.sortBy(_._2.count(c => c == bad || c == fill)).reverse.take(range).sortBy(_._1).map { case (off,s) => " " + off + ": " + s }.mkString("\n")
+  }
+
   @doc("Calculate damage given inputs, `its` = ignore spr")
   def magical(
     mag:       Int,
