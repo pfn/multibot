@@ -97,8 +97,8 @@ case class DiscordMultibot(token: String) {
   }
 
   def sourceOf(m: IMessage): String = {
-    val s = Option(m.getGuild).fold(m.getAuthor.getName)(
-      _.getName + "@" +  m.getAuthor.mention(true))
+    val s = Option(m.getGuild).fold(m.getAuthor.getName)(g =>
+      g.getName + "@" +  m.getAuthor.getDisplayName(g))
     s"<$s>"
   }
   def log(m: IMessage): Unit = {
