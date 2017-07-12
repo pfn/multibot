@@ -97,8 +97,15 @@ case class DiscordMultibot(token: String) {
   }
 
   def sourceOf(m: IMessage): String = {
-    val s = Option(m.getGuild).fold("")(_.getName + "@")
-    s + m.getAuthor.mention(true)
+    val s = Option(m.getGuild).fold(m.getAuthor.getName)(
+      _.getName + "@" m.getAuthor.mention(true))
+    s"<$s>"
+  }
+  def log(m: IMessage): Unit = {
+    val unknown = m.getContent
+    import sx.blah.discord.Discord4J
+    if (unknown.startsWith("*"))
+      LOGGER.info(sourceOf(m) + " " + unknown)
   }
 
   def associateMessage(incoming: IMessage, response: IMessage) {
@@ -169,9 +176,7 @@ case class DiscordMultibot(token: String) {
                  |```
                  |""".stripMargin))
           case unknown =>
-            if (unknown.startsWith("*")) {
-              sx.blah.discord.Discord4J.LOGGER.info(sourceOf(m) + "> " + unknown)
-            }
+            log(m)
             interp(m, NEW)
             None
         }
