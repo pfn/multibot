@@ -96,6 +96,11 @@ case class DiscordMultibot(token: String) {
     Option(m.getGuild).getOrElse(m.getAuthor).getStringID
   }
 
+  def sourceOf(m: IMessage): String = {
+    val s = Option(m.getGuild).fold("")(_.getName + "@")
+    s + m.getAuthor.mention(true)
+  }
+
   def associateMessage(incoming: IMessage, response: IMessage) {
     messages += incoming.getLongID-> response
     messages = messages.takeRight(32)
@@ -163,7 +168,10 @@ case class DiscordMultibot(token: String) {
                  | *help        duh
                  |```
                  |""".stripMargin))
-          case _ =>
+          case unknown =>
+            if (unknown.startsWith("*")) {
+              sx.blah.discord.Discord4J.LOGGER.info(sourceOf(m) + "> " + unknown)
+            }
             interp(m, NEW)
             None
         }
