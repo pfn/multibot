@@ -105,7 +105,7 @@ case class DiscordMultibot(token: String) {
     val unknown = m.getContent
     import sx.blah.discord.Discord4J
     if (unknown.startsWith("*"))
-      LOGGER.info(sourceOf(m) + " " + unknown)
+      Discord4J.LOGGER.info(sourceOf(m) + " " + unknown)
   }
 
   def associateMessage(incoming: IMessage, response: IMessage) {
