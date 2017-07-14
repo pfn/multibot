@@ -70,6 +70,7 @@ case class DiscordMultibot(token: String) {
   import sx.blah.discord.api.events.IListener
   import sx.blah.discord.handle.obj.IMessage
   import sx.blah.discord.handle.impl.events.guild.channel.message._
+  import sx.blah.discord.handle.impl.events.ReadyEvent
   import collection.immutable.ListMap
   sys.props("scala.color") = "false"
   sealed trait Mode
@@ -115,6 +116,12 @@ case class DiscordMultibot(token: String) {
 
   def messageById(id: Long): Option[IMessage] = messages.get(id)
 
+  def ratelimit[A](limited: => A) {
+    import sx.blah.discord.util.RequestBuffer
+
+    RequestBuffer.request(() => limited)
+  }
+
   def interp(m: IMessage, mode: Mode) = {
     val h = InterpretersHandler(
       cache, /*HttpHandler(),*/
@@ -143,9 +150,15 @@ case class DiscordMultibot(token: String) {
     }
   }
 
+  builder.registerListener(new IListener[ReadyEvent] {
+    import sx.blah.discord.Discord4J
+    override def handle(event: ReadyEvent) = 
+      Discord4J.LOGGER.info("multi-bot ready for action")
+  })
+
   builder.registerListener(new IListener[MessageEvent] {
-    override def handle(event: MessageEvent) = event match {
-      case r: MessageReceivedEvent =>
+    override def handle(event: MessageEvent) = ratelimit { event match {
+      case r: MessageReceivedEvent => 
         val m = r.getMessage
         val newmessage = m.getContent match {
           case "*source" =>
@@ -189,7 +202,7 @@ case class DiscordMultibot(token: String) {
       case u: MessageUpdateEvent =>
         interp(u.getMessage, UPDATE)
       case _ =>
-    }
+    }}
   })
   builder.login()
 }
