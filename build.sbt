@@ -73,7 +73,7 @@ libraryDependencies += "org.psywerx.hairyfotr" %% "linter" % "0.1.17"
 
 buildInfoSettings
 
-sourceGenerators in Compile <+= buildInfo
+sourceGenerators in Compile += buildInfo.taskValue
 
 buildInfoKeys := Seq[BuildInfoKey](name, version, scalaVersion, sbtVersion, scalacOptions in(Compile, compile), libraryDependencies in(Compile, compile))
 
