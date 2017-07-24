@@ -98,9 +98,9 @@ object ffbe {
 
   def fvariance(value: Int): Variance = variance(0.85, 1, value)
 
-  @doc("[WRONG] Calculate the damage of an esper, stats=atk+mag+def+spr of esper")
-  def esper(stats: Double, ratio: Double, defs: Int = 10) =
-    ((math.pow(0.01 * stats.toInt, 2)/defs).toInt * ratio).toInt
+  @doc("Calculate the damage of an esper, primary=mainstats, secondary=offstats of esper, e.g. atk+def and mag+spr")
+  def esper(primary: Double, secondary: Double, ratio: Double, defs: Int = 10, evomag: Double = 0.0, level: Int = 40): Int =
+    ((math.pow(math.floor((primary + secondary/2) * (1 + evomag)), 2) * ratio * (1 + level/100.0)) / defs).toInt
 
   @doc("Calculate the lapis cost to farm 0-100% trust given max `nrg` and `seconds` runtime")
   def tmr(nrg: Int, seconds: Int = 36): String =
