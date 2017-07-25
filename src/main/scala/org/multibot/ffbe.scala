@@ -156,7 +156,7 @@ object ffbe {
     val good  = '.'
     val bad   = 'X'
     val fill  = '_'
-    val spark = '^'
+    val spark = ':'
     val (headOffset,range) = (for {
       x <- xs.headOption
       y <- ys.headOption
