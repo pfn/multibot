@@ -122,6 +122,33 @@ case class DiscordMultibot(token: String) {
     RequestBuffer.request(() => limited)
   }
 
+  def scalaInterp(m: IMessage, mode: Mode) = {
+    val msg = Msg(serverID(m), "sender-ignored", m.getContent.drop(1))
+    DieOn.error {
+      val res = cache.scalaInterpreter(msg.channel) { (si, cout) =>
+        import scala.tools.nsc.interpreter.Results._
+
+        si interpret msg.message match {
+          case Success => cout.toString.replaceAll("(?m:^res[0-9]+: )", "")
+          case Error => cout.toString.replaceAll("^<console>:[0-9]+: ", "")
+          case Incomplete => "error: unexpected EOF found, incomplete expression"
+        }
+      }
+      mode match {
+        case NEW =>
+          val ms = m.getMentions.asScala.foldLeft("") { (ac,s) =>
+            s.mention + " " + ac }
+          val newmessage = m.getChannel.sendMessage(
+            m.getAuthor.mention + " " + ms + markdownOutputSanitizer(res))
+          associateMessage(m, newmessage)
+        case UPDATE =>
+          messageById(m.getLongID).foreach { msg =>
+            val ms = msg.getMentions.asScala.map(_.mention).mkString(" ")
+            msg.edit(ms + " " + markdownOutputSanitizer(res))
+          }
+      }
+    }
+  }
   def interp(m: IMessage, mode: Mode) = {
     val h = InterpretersHandler(
       cache, /*HttpHandler(),*/
@@ -160,6 +187,7 @@ case class DiscordMultibot(token: String) {
     override def handle(event: MessageEvent) = ratelimit { event match {
       case r: MessageReceivedEvent => 
         val m = r.getMessage
+        val FFBE = """\*ffbe\..+""".r
         val newmessage = m.getContent match {
           case "*source" =>
             Some(m.reply("You can find my sources at: <https://github.com/pfn/multibot>"))
@@ -188,6 +216,10 @@ case class DiscordMultibot(token: String) {
                  | *help        duh
                  |```
                  |""".stripMargin))
+          case FFBE() => 
+            log(m)
+            scalaInterp(m, NEW)
+            None
           case unknown =>
             log(m)
             interp(m, NEW)
@@ -200,6 +232,7 @@ case class DiscordMultibot(token: String) {
         }
         messages -= d.getMessage.getLongID
       case u: MessageUpdateEvent =>
+        scalaInterp(u.getMessage, UPDATE)
         interp(u.getMessage, UPDATE)
       case _ =>
     }}

@@ -11,11 +11,11 @@ class InputSanitizerTest extends FlatSpec {
     ensureSanitizedInput(in, in)
 
   "Inputs" should "be sanitized" in {
-    ensureSanitizedInput("```foo```", "foo")
+    ensureSanitizedInput("```\nfoo\n```", "foo\n")
     ensureSanitizedInput("`foo`", "foo")
 
     // I have no idea why anyone would do this, but make sure the result is expected
-    ensureSanitizedInput("````foo````", "`foo`")
+    ensureSanitizedInput("```\n`foo`\n```", "`foo`\n")
     ensureSanitizedInput("``foo``", "`foo`")
   }
 

@@ -10,7 +10,7 @@ object ffbe {
     case _ => 1 - (1 - rainbow_11_d(n - 1)) * (1 - rainbow11)
   }
 
-  def help(function: String): String = {
+  def help(function: String = ""): String = {
     import reflect.runtime.universe._
     val t = typeOf[ffbe.type]
     val members = t.typeSymbol.typeSignature.members
@@ -98,9 +98,16 @@ object ffbe {
 
   def fvariance(value: Int): Variance = variance(0.85, 1, value)
 
-  @doc("Calculate the damage of an esper, primary=mainstats, secondary=offstats of esper, e.g. atk+def and mag+spr")
-  def esper(primary: Double, secondary: Double, ratio: Double, defs: Int = 10, evomag: Double = 0.0, level: Int = 40): Int =
-    ((math.pow(math.floor((primary + secondary/2) * (1 + evomag)), 2) * ratio * (1 + level/100.0)) / defs).toInt
+  @doc("Calculate the damage of an esper, primary=mainstats, secondary=offstats of esper, e.g. full atk+def and mag+spr")
+  def esper(
+    primary:   Double,
+    secondary: Double,
+    ratio:     Double,
+    defs:      Int    = 25,
+    evomag:    Double = 0.0,
+    level:     Int    = 40): Int =
+    ((math.pow(math.floor((primary + secondary/2)/100 * (1 + evomag)), 2) *
+      ratio * (1 + level/100.0)) / defs).toInt
 
   @doc("Calculate the lapis cost to farm 0-100% trust given max `nrg` and `seconds` runtime")
   def tmr(nrg: Int, seconds: Int = 36): String =
@@ -138,22 +145,6 @@ object ffbe {
     }.toList.sorted
   }
 
-/*
-  def test() {
-    val dr = chain_frames("70,7,5,7,7,7,7")
-    val ffb = chain_frames("40,7,5,7,7,7,7", cast=8)
-    val qt = chain_frames("22,5,5,5,5,5,5,5,5,5,5,20", cast=20)
-    val bs = chain_frames("40-25-25-25-25-25-25-25-25")
-    solve_chain(dr, ffb)
-    println("---")
-    solve_chain(dr, dr)
-    println("---")
-    solve_chain(qt, qt)
-    println("---")
-    solve_chain(bs, bs)
-  }
-  */
-
   case class ChainGraph(source: Set[Int], frame: Int)
   object ChainGraph {
     implicit val chainGraphOrdering = new Ordering[ChainGraph] {
@@ -162,10 +153,10 @@ object ffbe {
   }
   @doc("Solve the outputs of `chain_frames` for chainability")
   def solve_chain(xs: List[Int], ys: List[Int]) {
-    val good  = 'X'
-    val bad   = 'O'
+    val good  = '.'
+    val bad   = 'X'
     val fill  = '_'
-    val spark = '*'
+    val spark = '^'
     val (headOffset,range) = (for {
       x <- xs.headOption
       y <- ys.headOption
@@ -205,7 +196,7 @@ object ffbe {
     ratio:     Double,
     killer:    Double = 0,
     elemental: Double = 0,
-    spr:       Int    = 10,
+    spr:       Int    = 25,
     its:       Double = 0.0,
     level:     Int    = 100): Int = {
     ((math.pow(mag, 2) / (spr * (1 - its))).toInt *
@@ -220,7 +211,7 @@ object ffbe {
     killer:     Double  = 0,
     elemental:  Double  = 0,
     elemental2: Double  = 0,
-    defs:       Int     = 10,
+    defs:       Int     = 25,
     itd:        Double  = 0.0,
     dw:         Boolean = true,
     level:      Int     = 100,
@@ -259,8 +250,8 @@ object ffbe {
     killer:     Double  = 0,
     elemental:  Double  = 0,
     elemental2: Double  = 0,
-    defs:       Int     = 10,
-    spr:        Int     = 10,
+    defs:       Int     = 25,
+    spr:        Int     = 25,
     itd:        Double  = 0,
     its:        Double  = 0,
     dw:         Boolean = true,
