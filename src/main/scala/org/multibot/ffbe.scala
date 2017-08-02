@@ -199,9 +199,9 @@ object ffbe {
     spr:       Int    = 25,
     its:       Double = 0.0,
     level:     Int    = 100): Int = {
-    ((math.pow(mag, 2) / (spr * (1 - its))).toInt *
+    (math.floor(math.pow(mag, 2) / (spr * (1 - its))).toInt *
       (1 + killer) * math.max(0, (1 + elemental)) *
-        (1 + (level / 100)) * ratio).toInt
+        (1 + (level / 100.0)) * ratio).toInt
   }
 
   @doc("Calculate damage given inputs, `elemental2` = element debuff on skill, `itd` = ignore def, `defs` = def")
@@ -223,9 +223,9 @@ object ffbe {
           physical(atk - r,
             ratio, killer, elemental + elemental2, 0, defs, itd, false, level, 0)
     } else {
-      ((math.pow(atk, 2) / (defs * (1 - itd))).toInt *
+      (math.floor(math.pow(atk, 2) / (defs * (1 - itd))).toInt *
         (1 + killer) * math.max(0, (1 + elemental)) *
-          (1 + (level / 100)) * ratio).toInt
+          (1 + (level / 100.0)) * ratio).toInt
     }
   }
 
