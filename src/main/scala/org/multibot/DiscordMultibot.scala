@@ -151,19 +151,22 @@ case class DiscordMultibot(token: String) {
   }
   def interp(m: IMessage, mode: Mode) = {
     val h = InterpretersHandler(
-      cache, /*HttpHandler(),*/
+      cache,
       (x, y) => {
         mode match {
           case NEW =>
             val ms = m.getMentions.asScala.foldLeft("") { (ac,s) =>
               s.mention + " " + ac }
-            val newmessage = m.getChannel.sendMessage(
-              m.getAuthor.mention + " " + ms + markdownOutputSanitizer(y))
+            val prefix = m.getAuthor.mention + " " + ms
+            val newmessage = m.getChannel.sendMessage(prefix +
+              markdownOutputSanitizer(y.take(2000 - prefix.length - 8)))
             associateMessage(m, newmessage)
           case UPDATE =>
             messageById(m.getLongID).foreach { msg =>
               val ms = msg.getMentions.asScala.map(_.mention).mkString(" ")
-              msg.edit(ms + " " + markdownOutputSanitizer(y))
+              val prefix = ms + " "
+              msg.edit(prefix + markdownOutputSanitizer(
+                y.take(2000 - prefix.length - 8)))
             }
         }
       },
