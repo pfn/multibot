@@ -41,7 +41,8 @@ libraryDependencies ++= {
     "com.github.julien-truffaut" %% "monocle-macro" % monocleVersion,
     "org.spire-math" %% "spire" % spireVersion,
     "org.scalaz.stream" %% "scalaz-stream" % scalazStreamVersion,
-    "com.github.austinv11" % "Discord4J" % "2.9.2"
+    "com.github.austinv11" % "Discord4J" % "2.9.2",
+    "com.ffbecalc" %% "model" % "0.1-SNAPSHOT"
 //    "org.pelotom" %% "effectful" % "1.1-SNAPSHOT"
   )
 }

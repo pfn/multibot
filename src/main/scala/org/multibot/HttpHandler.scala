@@ -16,7 +16,7 @@ case class Request(host: String, path: Option[String], headers: Map[String,Strin
   def <<<(f: String): Request = copy(post = Some(f), file = true)
   def <:<(h: Map[String, String]) = copy(headers = headers ++ h)
   def asURLConnection: java.net.HttpURLConnection = {
-    val base = "http://" + host
+    val base = "https://" + host
     val withpath = path.fold(base) { p => base + "/" + p }
     def enc(s: String) = java.net.URLEncoder.encode(s, "utf-8")
     val q = query.toList.map { case (k,v) => enc(k) + "=" + enc(v) }.mkString("&")

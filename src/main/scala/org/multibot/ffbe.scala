@@ -1,7 +1,28 @@
+object PicklerImplicits extends com.ffbecalc.PicklerImplicits
+import PicklerImplicits._
+import boopickle.Default._
+
+object Data {
+  import org.multibot._
+  def get[A : Pickler](url: String): A = {
+    val uc = (:/("ffbecalc.com") / url).asURLConnection
+    val in = uc.getInputStream
+    val len = uc.getContentLength
+    val bbout = new java.io.ByteArrayOutputStream
+    val buf = Array.ofDim[Byte](32768)
+    println(len)
+    Stream.continually(
+      in.read(buf, 0, 32768)).takeWhile(_ != -1).foreach(bbout.write(buf, 0, _))
+    Unpickle[A].fromBytes(java.nio.ByteBuffer.wrap(bbout.toByteArray))
+  }
+}
+
 final class doc(help: String)
   extends annotation.Annotation
   with annotation.StaticAnnotation
 object ffbe {
+  lazy val equip = Data.get[List[com.ffbecalc.EquipIndex]]("pickle/equip/index.pickle")
+  lazy val materia = Data.get[List[com.ffbecalc.MateriaIndex]]("pickle/materia/index.pickle")
   private[this] val rainbow11 = 1 - (0.95 * math.pow(0.99, 10))
 
   private[this] def rainbow_11_d(n: Int): Double = n match {

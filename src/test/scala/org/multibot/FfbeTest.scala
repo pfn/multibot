@@ -15,4 +15,11 @@ class FfbeTest extends FunSuite {
     info("---")
     solve_chain(bs, bs)
   }
+
+  test("load equip") {
+    info(ffbe.equip.map(_.name).head)
+  }
+  test("load materia") {
+    info(ffbe.materia.map(_.name).head)
+  }
 }
