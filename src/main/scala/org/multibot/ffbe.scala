@@ -7,10 +7,8 @@ object Data {
   def get[A : Pickler](url: String): A = {
     val uc = (:/("ffbecalc.com") / url).asURLConnection
     val in = uc.getInputStream
-    val len = uc.getContentLength
     val bbout = new java.io.ByteArrayOutputStream
     val buf = Array.ofDim[Byte](32768)
-    println(len)
     Stream.continually(
       in.read(buf, 0, 32768)).takeWhile(_ != -1).foreach(bbout.write(buf, 0, _))
     Unpickle[A].fromBytes(java.nio.ByteBuffer.wrap(bbout.toByteArray))
