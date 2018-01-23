@@ -82,6 +82,7 @@ case class DiscordMultibot(token: String) {
     "205384125513859074" :: // r/ffbe
     Nil)
   val builder = new ClientBuilder
+  builder.online("*help | https://scala-lang.org/")
   builder.withToken(token)
   var messages = ListMap.empty[Long,IMessage]
 
