@@ -19,7 +19,9 @@ final class doc(help: String)
   extends annotation.Annotation
   with annotation.StaticAnnotation
 object ffbe {
+  @doc("Return a list of all known equipmemnt")
   lazy val equip = Data.get[List[com.ffbecalc.EquipIndex]]("pickle/equip/index.pickle")
+  @doc("Return a list of all known materia")
   lazy val materia = Data.get[List[com.ffbecalc.MateriaIndex]]("pickle/materia/index.pickle")
   private[this] val rainbow11 = 1 - (0.95 * math.pow(0.99, 10))
 
@@ -39,7 +41,7 @@ object ffbe {
     if (matches.isEmpty) {
       val fs = members.collect {
         case s if s.isPublic && s.owner.asType == t.typeSymbol &&
-          !s.isSynthetic && s.isMethod &&
+          !s.isSynthetic && s.isMethod && s.asMethod.paramLists.nonEmpty &&
             s.asMethod.paramLists.head.nonEmpty => s.name.toString
       }.toList.distinct.sorted.mkString(", ")
       s"Available functions:\n$fs"
